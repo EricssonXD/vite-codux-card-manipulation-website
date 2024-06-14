@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Dnd Kit",
+        "components": [
+            {
+                "filePath": "/Draggable",
+                "exportName": "default",
+                "name": "Droppable"
+            },
+            {
+                "filePath": "/Droppable",
+                "exportName": "default",
+                "name": "Draggable"
+            }
+        ]
+    }
+]

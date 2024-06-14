@@ -1,0 +1,18 @@
+.root {
+  overflow: visible;
+  height: auto;
+  min-width: 600px;
+  min-height: 600px;
+}
+
+.grid {
+  display: grid;
+  grid-template: 1fr / 1fr 1fr;
+  gap: 20px;
+}
+
+.dropSlot {
+  color: #ff0000;
+  min-width: 20px;
+  min-height: 20px;
+}
