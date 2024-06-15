@@ -1,19 +1,33 @@
 import classNames from 'classnames';
 import styles from './iceberg-overview-screen.module.scss';
-import { IceBerg } from '../ice-berg/ice-berg';
-import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import {
     DndContext,
     closestCenter,
-    MouseSensor,
-    TouchSensor,
+    KeyboardSensor,
+    PointerSensor,
     useSensor,
     useSensors,
-    useDraggable,
     useDroppable,
+    DragOverEvent,
+    rectIntersection,
+    closestCorners,
+    CollisionDetection,
+    Collision,
+    Active,
+    DroppableContainer,
 } from '@dnd-kit/core';
-
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { DraggableCard } from '../draggable-card/draggable-card';
+import { Container, Header } from 'semantic-ui-react';
+import { RectMap } from '@dnd-kit/core/dist/store';
+import { Coordinates } from '@dnd-kit/core/dist/types';
 
 export interface IcebergOverviewScreenProps {
     className?: string;
@@ -24,82 +38,155 @@ export interface IcebergOverviewScreenProps {
  * To create custom component templates, see https://help.codux.com/kb/en/article/kb16522
  */
 export const IcebergOverviewScreen = ({ className }: IcebergOverviewScreenProps) => {
-
     return (
         <div className={classNames(styles.root, className)}>
+            <Complete></Complete>
         </div>
     );
 };
 
-function AAA() {
-    const containers = ['A', 'B', 'C'];
-    const cardTrayContainers = ['1', '2', '3', '4', '5'];
-    const draggables = ['1', '2', '3'];
-    const [parent, setParent] = useState(null);
-    // disallow highlighting of the text when dragging
-    const draggableMarkup = <Draggable id="draggable">Drag me</Draggable>;
+function Complete() {
+    const [cardTray, setCardTray] = useState([1, 2, 3, 4, 5]);
+    const [icebergSlots, setIcebergSlots] = useState<number[]>([]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
+
+
+
+    const { setNodeRef: actionSlotRef } = useDroppable({
+        id: 'actionSlot',
+        data: { type: 'iceBerg' },
+    });
+    const { setNodeRef: emotionSlotRef } = useDroppable({
+        id: 'emotionSlot',
+        data: { type: 'iceBerg' },
+    });
+
 
     return (
-        <DndContext onDragEnd={handleDragEnd}>
-            <div className={styles.grid}>
-                <div>{containers.map((id) => (
-                    // We updated the Droppable component so it would accept an `id`
-                    // prop and pass it to `useDroppable`
-                    <Droppable key={id} id={id}>
-                        {parent === id ? draggableMarkup : 'Drop here'}
-                    </Droppable>
-                ))}</div>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={customCollisionDetectionAlgorithm}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+        >
+            <SortableContext items={[...cardTray, ...icebergSlots]} strategy={verticalListSortingStrategy} id='mainContainer'>
+                <div className={styles.grid}>
 
-                <div>{cardTrayContainers.map((id) => (
-                    // We updated the Droppable component so it would accept an `id`
-                    // prop and pass it to `useDroppable`
-                    <Droppable key={"T" + id} id={"T" + id}>
-                        {parent === "T" + id ? draggableMarkup : 'Drop here'}
-                    </Droppable>
-                ))}</div>
+                    {/* Iceberg Slots */}
+                    <section>
+                        <SortableContext items={icebergSlots} strategy={verticalListSortingStrategy} id='SlotContainer' >
+                            <div ref={actionSlotRef} style={{ width: '100px', height: '100px', backgroundColor: 'rgba(128, 128, 128, 0.3)' }} />
+                        </SortableContext>
 
-                {draggableMarkup}
-            </div>
+                        {/* <div ref={emotionSlotRef}>
+                        <DropSlot />
+                    </div> */}
+                    </section>
+
+                    {/* Card Tray */}
+                    <section>
+                        <SortableContext items={cardTray} strategy={verticalListSortingStrategy} id='TrayContainer'>
+                            {cardTray.map((id) => (
+                                <div className={styles.draggableCard}>
+                                    <DraggableCard key={id} id={id} imageText={id.toString()} />
+                                </div>
+                            ))}
+                        </SortableContext>
+                    </section>
+                </div>
+            </SortableContext>
         </DndContext>
     );
 
     function handleDragEnd(event: any) {
-        const { over } = event;
+        const { active, over } = event;
 
-        // If the item is dropped over a container, set it as the parent
-        // otherwise reset the parent to `null`
-        setParent(over ? over.id : null);
-    }
-}
+        if (active.id !== over.id) {
 
-function Droppable(props: any) {
-    const { isOver, setNodeRef } = useDroppable({
-        id: props.id,
-    });
-    const style = {
-        color: isOver ? 'green' : undefined,
-    };
+            setCardTray((items) => {
+                const oldIndex = items.indexOf(active.id);
+                const newIndex = items.indexOf(over.id);
 
-    return (
-        <div ref={setNodeRef} style={style}>
-            {props.children}
-        </div>
-    );
-}
+                return arrayMove(items, oldIndex, newIndex);
+            });
 
-function Draggable(props: any) {
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
-        id: props.id,
-    });
-    const style = transform
-        ? {
-            transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
         }
-        : undefined;
+    }
 
+    function handleDragOver(event: DragOverEvent) {
+        const { active, over, collisions } = event;
+
+
+        if (!over) return;
+        if (over.data.current) {
+            console.log(over.data.current.type);
+        } else {
+            console.log("Nothing");
+        }
+        if (over.data.current ? over.data.current.type === 'iceBerg' : false) {
+            console.log('over iceberg');
+        }
+
+    }
+
+
+}
+
+function DropSlot() {
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-            {props.children}
+        <div>
+            <div style={{ width: '100px', height: '100px', backgroundColor: 'rgba(128, 128, 128, 0.3)' }}></div>
         </div>
     );
 }
+
+
+
+function customCollisionDetectionAlgorithm(args: any): Collision[] {
+    const targetContainers: DroppableContainer[] = args.droppableContainers;
+    const droppableRects: RectMap = args.droppableRects;
+
+
+    const icebergCollision = rectIntersection({
+        ...args,
+        droppableRects: droppableRects,
+        droppableContainers: targetContainers.filter((container: DroppableContainer) => (container.data.current ? container.data.current.type === 'iceBerg' : false))
+    });
+
+    if (icebergCollision.length > 0) {
+        // The trash is intersecting, return early
+        console.log('iceberg collision');
+        return icebergCollision;
+    }
+
+    // console.log(targetContainers);
+    // for (let container of targetContainers) {
+    //     console.log(container.data.current!.type);
+    // }
+
+
+
+    // First, let's see if the `trash` droppable rect is intersecting
+    const rectIntersectionCollisions = rectIntersection({
+        ...args,
+        droppableContainers: targetContainers.filter(({ id }) => id === 'trash')
+    });
+
+    // Collision detection algorithms return an array of collisions
+    if (rectIntersectionCollisions.length > 0) {
+        // The trash is intersecting, return early
+        return rectIntersectionCollisions;
+    }
+
+    // Compute other collisions
+    return closestCorners({
+        ...args,
+        droppableContainers: targetContainers.filter(({ id }) => id !== 'trash')
+    });
+};

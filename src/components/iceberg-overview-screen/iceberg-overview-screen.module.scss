@@ -8,11 +8,16 @@
 .grid {
   display: grid;
   grid-template: 1fr / 1fr 1fr;
-  gap: 20px;
+  width: 100px;
+  gap: 100px;
 }
 
 .dropSlot {
   color: #ff0000;
   min-width: 20px;
   min-height: 20px;
+}
+.cardTray {
+}
+.cardTrayContainer {
 }

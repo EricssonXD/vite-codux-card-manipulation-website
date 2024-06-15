@@ -1,0 +1,58 @@
+.root {
+  min-width: 100px;
+  min-height: 100px;
+  display: block;
+  text-align: start;
+  position: relative;
+  text-align: center;
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
+                                      supported by Chrome, Edge, Opera and Firefox */
+  width: 100%;
+  height: 100%;
+}
+
+.cardImg {
+  position: absolute;
+  width: 100px;
+  height: 100%;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+.centeredCardText {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #000000;
+  // text-shadow: 0 0 10px #fff;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: white;
+  // 0 0 10px #fff,
+  // 0 0 20px #fff,
+  // 0 0 40px #0ff,
+  // 0 0 80px #0ff,
+  // 0 0 90px #0ff,
+  // 0 0 100px #0ff,
+  // 0 0 150px #0ff;
+  font-size: 24px;
+  font-weight: 800;
+  left: 50px;
+  top: 50px;
+}
+
+.draggableCard {
+  width: 1000px;
+  height: 100px;
+}
