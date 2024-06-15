@@ -6,10 +6,13 @@ import { motion } from 'framer-motion';
 import { useRef } from 'react';
 import { IcebergOverviewScreen } from './components/iceberg-overview-screen/iceberg-overview-screen';
 import { Test } from './components/test/test';
+import NextDnd from './components/iceberg-overview-screen/next-dnd';
 
 function App() {
     return (
         <DndContext>
+            <NextDnd />
+
             <div className={styles.App}>
                 <h2>Welcome to your App Component 🎉</h2>
                 <span>

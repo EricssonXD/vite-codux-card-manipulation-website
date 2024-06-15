@@ -20,7 +20,7 @@ export const DraggableCard = ({ className, imageText, imageSrc, id }: DraggableC
 
     return (
         <div className={classNames(styles.root, className)}>
-            <img src={imageSrc ? imageSrc : PlaceholderJpg} className={styles.cardImg} />
+            <img draggable="false" src={imageSrc ? imageSrc : PlaceholderJpg} className={styles.cardImg} />
             <div className={styles.centeredCardText}>{imageText}</div>
         </div>
     );

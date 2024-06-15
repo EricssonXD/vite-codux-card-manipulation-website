@@ -27,7 +27,7 @@ import {
 import { DraggableCard } from '../draggable-card/draggable-card';
 import { Container, Header } from 'semantic-ui-react';
 import { RectMap } from '@dnd-kit/core/dist/store';
-import TestTemplate from './TestTemplate';
+import NextDnd from './next-dnd';
 
 export interface IcebergOverviewScreenProps {
     className?: string;
@@ -40,10 +40,24 @@ export interface IcebergOverviewScreenProps {
 export const IcebergOverviewScreen = ({ className }: IcebergOverviewScreenProps) => {
     return (
         <div className={classNames(styles.root, className)}>
-            <TestTemplate />
+            <NextDnd />
         </div>
     );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function Complete() {
     const [cardTray, setCardTray] = useState([1, 2, 3, 4, 5]);
@@ -68,7 +82,7 @@ function Complete() {
     });
 
     return (
-        <TestTemplate />
+        <NextDnd />
     )
 
 
