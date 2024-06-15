@@ -18,24 +18,10 @@ export interface DraggableCardProps {
  */
 export const DraggableCard = ({ className, imageText, imageSrc, id }: DraggableCardProps) => {
 
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-        id: id,
-        data: { type: 'tray' },
-    });
-
-    const style = {
-        // width: '100%',
-        // height: '100%',
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <div className={classNames(styles.root, className)}>
-                <img src={imageSrc ? imageSrc : PlaceholderJpg} className={styles.cardImg} />
-                <div className={styles.centeredCardText}>{imageText}</div>
-
-            </div>
+        <div className={classNames(styles.root, className)}>
+            <img src={imageSrc ? imageSrc : PlaceholderJpg} className={styles.cardImg} />
+            <div className={styles.centeredCardText}>{imageText}</div>
         </div>
     );
 };

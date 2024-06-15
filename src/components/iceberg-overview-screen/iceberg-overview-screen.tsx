@@ -27,7 +27,7 @@ import {
 import { DraggableCard } from '../draggable-card/draggable-card';
 import { Container, Header } from 'semantic-ui-react';
 import { RectMap } from '@dnd-kit/core/dist/store';
-import { Coordinates } from '@dnd-kit/core/dist/types';
+import TestTemplate from './TestTemplate';
 
 export interface IcebergOverviewScreenProps {
     className?: string;
@@ -40,7 +40,7 @@ export interface IcebergOverviewScreenProps {
 export const IcebergOverviewScreen = ({ className }: IcebergOverviewScreenProps) => {
     return (
         <div className={classNames(styles.root, className)}>
-            <Complete></Complete>
+            <TestTemplate />
         </div>
     );
 };
@@ -67,42 +67,10 @@ function Complete() {
         data: { type: 'iceBerg' },
     });
 
-
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={customCollisionDetectionAlgorithm}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-        >
-            <SortableContext items={[...cardTray, ...icebergSlots]} strategy={verticalListSortingStrategy} id='mainContainer'>
-                <div className={styles.grid}>
+        <TestTemplate />
+    )
 
-                    {/* Iceberg Slots */}
-                    <section>
-                        <SortableContext items={icebergSlots} strategy={verticalListSortingStrategy} id='SlotContainer' >
-                            <div ref={actionSlotRef} style={{ width: '100px', height: '100px', backgroundColor: 'rgba(128, 128, 128, 0.3)' }} />
-                        </SortableContext>
-
-                        {/* <div ref={emotionSlotRef}>
-                        <DropSlot />
-                    </div> */}
-                    </section>
-
-                    {/* Card Tray */}
-                    <section>
-                        <SortableContext items={cardTray} strategy={verticalListSortingStrategy} id='TrayContainer'>
-                            {cardTray.map((id) => (
-                                <div className={styles.draggableCard}>
-                                    <DraggableCard key={id} id={id} imageText={id.toString()} />
-                                </div>
-                            ))}
-                        </SortableContext>
-                    </section>
-                </div>
-            </SortableContext>
-        </DndContext>
-    );
 
     function handleDragEnd(event: any) {
         const { active, over } = event;
