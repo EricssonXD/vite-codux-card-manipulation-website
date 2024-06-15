@@ -34,6 +34,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 function TTTTT() {
   const [items, setItems] = useState([1, 2, 3]);
+  const [items2, setItems2] = useState([1, 2, 3]);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -46,12 +47,21 @@ function TTTTT() {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
+    // onDragOver={}
     >
+
       <SortableContext
         items={items}
         strategy={verticalListSortingStrategy}
       >
         {items.map(id => <SortableItem key={id} id={id} />)}
+      </SortableContext>
+
+      <SortableContext
+        items={items2}
+        strategy={verticalListSortingStrategy}
+      >
+        {items2.map(id => <SortableItem key={id} id={id} />)}
       </SortableContext>
     </DndContext>
   );
@@ -70,7 +80,7 @@ function TTTTT() {
   }
 }
 
-export function SortableItem(props: any) {
+function SortableItem(props: any) {
   const {
     attributes,
     listeners,

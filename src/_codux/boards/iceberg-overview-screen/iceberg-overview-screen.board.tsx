@@ -7,7 +7,7 @@ export default createBoard({
     Board: () => <IcebergOverviewScreen />,
     isSnippet: true,
     environmentProps: {
-        windowWidth: 1004,
-        canvasWidth: 600,
+        windowWidth: 1052,
+        canvasWidth: 592,
     },
 });

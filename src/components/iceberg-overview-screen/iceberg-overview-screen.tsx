@@ -13,12 +13,7 @@ import {
     useDraggable,
     useDroppable,
 } from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+
 
 export interface IcebergOverviewScreenProps {
     className?: string;
@@ -29,18 +24,19 @@ export interface IcebergOverviewScreenProps {
  * To create custom component templates, see https://help.codux.com/kb/en/article/kb16522
  */
 export const IcebergOverviewScreen = ({ className }: IcebergOverviewScreenProps) => {
-    const parentRef = useRef(null);
 
     return (
         <div className={classNames(styles.root, className)}>
-            <AAA />
         </div>
     );
 };
 
 function AAA() {
     const containers = ['A', 'B', 'C'];
+    const cardTrayContainers = ['1', '2', '3', '4', '5'];
+    const draggables = ['1', '2', '3'];
     const [parent, setParent] = useState(null);
+    // disallow highlighting of the text when dragging
     const draggableMarkup = <Draggable id="draggable">Drag me</Draggable>;
 
     return (
@@ -53,13 +49,16 @@ function AAA() {
                         {parent === id ? draggableMarkup : 'Drop here'}
                     </Droppable>
                 ))}</div>
-                <div>{containers.map((id) => (
+
+                <div>{cardTrayContainers.map((id) => (
                     // We updated the Droppable component so it would accept an `id`
                     // prop and pass it to `useDroppable`
-                    <Droppable key={id} id={id}>
-                        {parent === id ? draggableMarkup : 'Drop here'}
+                    <Droppable key={"T" + id} id={"T" + id}>
+                        {parent === "T" + id ? draggableMarkup : 'Drop here'}
                     </Droppable>
                 ))}</div>
+
+                {draggableMarkup}
             </div>
         </DndContext>
     );
@@ -99,8 +98,8 @@ function Draggable(props: any) {
         : undefined;
 
     return (
-        <button ref={setNodeRef} style={style} {...listeners} {...attributes}>
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
             {props.children}
-        </button>
+        </div>
     );
 }
