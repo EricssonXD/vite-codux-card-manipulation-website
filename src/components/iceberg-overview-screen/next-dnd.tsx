@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { DragDropProvider } from '@dnd-kit/react';
+import { DragDropProvider, useDragDropManager } from '@dnd-kit/react';
 import { arrayMove, move, swap } from '@dnd-kit/helpers';
 
 import { Column, IceBergSlot } from './column';
 import { Item } from './item';
 import IcebergOverviewScreen_module from './iceberg-overview-screen.module.scss';
 import classes from './next-dnd.module.scss';
-import { DragDropManager } from '@dnd-kit/dom';
+import { DragDropManager, Draggable, Droppable } from '@dnd-kit/dom';
+import useMousePosition from './useMousePosition';
 
 // The example is from the official documentation
 // https://next.dndkit.com/react/guides/multiple-sortable-lists
@@ -19,16 +20,17 @@ export function NextDnd() {
         Emotion: ['B0'],
     });
     const previousItems = useRef(items);
+    const [mouseCord, setMouse] = useState({ x: 0, y: 0 });
+    const mousePosition = useMousePosition();
 
-    const manager = new DragDropManager({
-
-    });
+    const manager = useDragDropManager();
 
     return (
         <DragDropProvider
             manager={manager}
             onDragStart={() => {
                 previousItems.current = items;
+                setMouse({ x: mousePosition.x, y: mousePosition.y });
             }}
             onDragOver={(event) => {
                 const { source, target } = event.operation;
@@ -41,24 +43,22 @@ export function NextDnd() {
                     const slot = items[targetId];
 
 
-                    console.log('onDragOver', slot);
+                    // console.log('onDragOver', slot);
 
 
                     if (slot.length > 0) {
                         const currentItem = slot[0];
+                        const targetCard = manager.registry.draggables.get(currentItem) as Draggable;
+                        const sourceCard = manager.registry.droppables.get(source.id) as Droppable;
 
-                        setItems((items) => { return swap(items, source, target); });
+                        // manager.actions.setDragSource(targetCard.id)
 
-                        // setItems((items) => {
+                        // manager.actions.start({ coordinates: { x: mousePosition.x, y: mousePosition.y }, event: new Event('dragstart') })
+                        // manager.actions.move({ to: { x: mouseCord.x, y: mouseCord.y } })
+                        // manager.actions.stop()
+                        // manager.actions.setDropTarget(sourceCard.id)
+                        setItems((items) => { return move(move(items, targetCard, sourceCard), source, target); });
 
-                        //     return ({
-                        //         ...items,
-                        //         [targetId]: items[targetId].filter((id) => id !== currentItem),
-                        //         CardTray: [...items.CardTray, currentItem],
-                        //     })
-                        // });
-
-                        // setItems((items) => { return move(items, target, source ); });
                         return;
                     }
 
@@ -130,5 +130,3 @@ export function NextDnd() {
 }
 
 export default NextDnd;
-
-

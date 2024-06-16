@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dnd-kit/dom": "^0.0.2",
     "@dnd-kit/helpers": "^0.0.2",
     "@dnd-kit/react": "^0.0.2",
     "@popmotion/popcorn": "^0.4.4",

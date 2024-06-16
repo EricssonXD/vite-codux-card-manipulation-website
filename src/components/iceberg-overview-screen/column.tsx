@@ -1,6 +1,5 @@
 import { useDroppable } from '@dnd-kit/react';
-import { CollisionPriority } from '@dnd-kit/abstract';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { CollisionPriority, UniqueIdentifier } from '@dnd-kit/abstract';
 
 export function Column({ children, id }: { children: any; id: UniqueIdentifier }) {
     const { ref } = useDroppable({
