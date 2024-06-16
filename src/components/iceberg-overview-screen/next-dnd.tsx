@@ -6,6 +6,7 @@ import { Column, IceBergSlot } from './column';
 import { Item } from './item';
 import IcebergOverviewScreen_module from './iceberg-overview-screen.module.scss';
 import classes from './next-dnd.module.scss';
+import { DragDropManager } from '@dnd-kit/dom';
 
 // The example is from the official documentation
 // https://next.dndkit.com/react/guides/multiple-sortable-lists
@@ -19,8 +20,13 @@ export function NextDnd() {
     });
     const previousItems = useRef(items);
 
+    const manager = new DragDropManager({
+
+    });
+
     return (
         <DragDropProvider
+            manager={manager}
             onDragStart={() => {
                 previousItems.current = items;
             }}
@@ -37,18 +43,21 @@ export function NextDnd() {
 
                     console.log('onDragOver', slot);
 
+
                     if (slot.length > 0) {
                         const currentItem = slot[0];
 
-                        setItems((items) => { return move(items, source, target); });
-                        setItems((items) => {
+                        setItems((items) => { return swap(items, source, target); });
 
-                            return ({
-                                ...items,
-                                [targetId]: items[targetId].filter((id) => id !== currentItem),
-                                CardTray: [...items.CardTray, currentItem],
-                            })
-                        });
+                        // setItems((items) => {
+
+                        //     return ({
+                        //         ...items,
+                        //         [targetId]: items[targetId].filter((id) => id !== currentItem),
+                        //         CardTray: [...items.CardTray, currentItem],
+                        //     })
+                        // });
+
                         // setItems((items) => { return move(items, target, source ); });
                         return;
                     }
