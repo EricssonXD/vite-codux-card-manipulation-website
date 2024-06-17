@@ -6,50 +6,39 @@ import { Column, IceBergSlot } from './column';
 import { Item } from './item';
 import IcebergOverviewScreen_module from './iceberg-overview-screen.module.scss';
 import classes from './next-dnd.module.scss';
-import { DragDropManager, Draggable, Droppable } from '@dnd-kit/dom';
 import useMousePosition from './useMousePosition';
 
 // The example is from the official documentation
 // https://next.dndkit.com/react/guides/multiple-sortable-lists
 
-import { makeObservable, observable, computed, action, flow } from "mobx"
+import { makeAutoObservable } from "mobx"
 import { makePersistable } from 'mobx-persist-store';
+import { Draggable, Droppable } from '@dnd-kit/abstract';
 
 class IceBergOverview {
     value: {
         [key: string]: string[];
-    } = {
-            CardTray: ['A0', 'A1', 'A2'],
-            Emotion: ['B0'],
-        };
+    };
 
     constructor(value: {
         CardTray: string[];
         Emotion: string[];
     }) {
-        makeObservable(this, {
-            value: observable,
-            set: action,
-            fetch: flow
-        })
+        makeAutoObservable(this)
         this.value = value
 
         makePersistable(this, { name: 'bergSlot', properties: ["value"], storage: window.localStorage });
-
     }
 
-    set(value: {
-        [key: string]: string[];
-    }) {
-        this.value = value
-    }
-
-
-
-    *fetch(): Generator<any, any, any> {
-        const response = yield fetch("/api/value")
-        this.value = response.json()
-    }
+    set(value: { [key: string]: string[]; }): void;
+    set(fn: (value: { [key: string]: string[]; }) => { [key: string]: string[]; }): void;
+    set(valueOrFn: { [key: string]: string[]; } | ((value: { [key: string]: string[]; }) => { [key: string]: string[]; })) {
+        if (typeof valueOrFn === 'function') {
+            this.value = valueOrFn(this.value);
+        } else {
+            this.value = valueOrFn;
+        }
+    };
 }
 
 const items = new IceBergOverview({
@@ -98,7 +87,7 @@ export function NextDnd() {
                         // manager.actions.move({ to: { x: mouseCord.x, y: mouseCord.y } })
                         // manager.actions.stop()
                         // manager.actions.setDropTarget(sourceCard.id)
-                        items.set(move(move(items.value, targetCard, sourceCard), source, target));
+                        items.set((item) => move(move(item, targetCard, sourceCard), source, target));
 
                         return;
                     }

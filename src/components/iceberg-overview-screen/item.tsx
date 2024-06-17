@@ -1,8 +1,9 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/react/sortable';
-import { UniqueIdentifier } from '@dnd-kit/core';
 import { DraggableCard } from '../draggable-card/draggable-card';
 import { shapeIntersection } from '@dnd-kit/collision';
+import { UniqueIdentifier } from '@dnd-kit/abstract';
+
 
 
 export function Item({ id, index, column }: { id: UniqueIdentifier; index: number; column: string }) {
