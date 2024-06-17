@@ -12,14 +12,55 @@ import useMousePosition from './useMousePosition';
 // The example is from the official documentation
 // https://next.dndkit.com/react/guides/multiple-sortable-lists
 
-export function NextDnd() {
-    const [items, setItems] = useState<{
+import { makeObservable, observable, computed, action, flow } from "mobx"
+import { makePersistable } from 'mobx-persist-store';
+
+class IceBergOverview {
+    value: {
         [key: string]: string[];
-    }>({
-        CardTray: ['A0', 'A1', 'A2'],
-        Emotion: ['B0'],
-    });
-    const previousItems = useRef(items);
+    } = {
+            CardTray: ['A0', 'A1', 'A2'],
+            Emotion: ['B0'],
+        };
+
+    constructor(value: {
+        CardTray: string[];
+        Emotion: string[];
+    }) {
+        makeObservable(this, {
+            value: observable,
+            set: action,
+            fetch: flow
+        })
+        this.value = value
+
+        makePersistable(this, { name: 'bergSlot', properties: ["value"], storage: window.localStorage });
+
+    }
+
+    set(value: {
+        [key: string]: string[];
+    }) {
+        this.value = value
+    }
+
+
+
+    *fetch(): Generator<any, any, any> {
+        const response = yield fetch("/api/value")
+        this.value = response.json()
+    }
+}
+
+const items = new IceBergOverview({
+    CardTray: ['A0', 'A1', 'A2'],
+    Emotion: ['B0'],
+});
+
+
+export function NextDnd() {
+
+    const previousItems = useRef(items.value);
     const [mouseCord, setMouse] = useState({ x: 0, y: 0 });
     const mousePosition = useMousePosition();
 
@@ -29,7 +70,7 @@ export function NextDnd() {
         <DragDropProvider
             manager={manager}
             onDragStart={() => {
-                previousItems.current = items;
+                previousItems.current = items.value;
                 setMouse({ x: mousePosition.x, y: mousePosition.y });
             }}
             onDragOver={(event) => {
@@ -40,7 +81,7 @@ export function NextDnd() {
 
                 if (source?.type === 'item' && target?.type === 'iceberg') {
                     const targetId = target.id.toString();
-                    const slot = items[targetId];
+                    const slot = items.value[targetId];
 
 
                     // console.log('onDragOver', slot);
@@ -57,7 +98,7 @@ export function NextDnd() {
                         // manager.actions.move({ to: { x: mouseCord.x, y: mouseCord.y } })
                         // manager.actions.stop()
                         // manager.actions.setDropTarget(sourceCard.id)
-                        setItems((items) => { return move(move(items, targetCard, sourceCard), source, target); });
+                        items.set(move(move(items.value, targetCard, sourceCard), source, target));
 
                         return;
                     }
@@ -72,7 +113,7 @@ export function NextDnd() {
                     // });
                 }
 
-                setItems((items) => { return move(items, source, target); });
+                items.set(move(items.value, source, target));
 
             }}
             onDragEnd={(event) => {
@@ -93,7 +134,7 @@ export function NextDnd() {
 
                 if (event.canceled) {
                     if (source && source.type === 'item') {
-                        setItems(previousItems.current);
+                        items.set(previousItems.current);
                     }
 
                     return;
@@ -111,13 +152,13 @@ export function NextDnd() {
                 {/* </IceBergSlot> */}
 
                 <IceBergSlot key={'Emotion'} id={'Emotion'} >
-                    {items.Emotion.map((id, index) => (
+                    {items.value.Emotion.map((id, index) => (
                         <Item key={id} id={id} index={index} column={'Emotion'} />
                     ))}
                 </IceBergSlot>
 
                 <Column key={'CardTray'} id={'CardTray'}>
-                    {items.CardTray.map((id, index) => (
+                    {items.value.CardTray.map((id, index) => (
                         <Item key={id} id={id} index={index} column={'CardTray'} />
                     ))}
                 </Column>
