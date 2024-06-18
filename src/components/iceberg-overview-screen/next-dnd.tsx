@@ -15,24 +15,20 @@ import { makeAutoObservable } from "mobx"
 import { makePersistable } from 'mobx-persist-store';
 import { Draggable, Droppable } from '@dnd-kit/abstract';
 
-class IceBergOverview {
-    value: {
-        [key: string]: string[];
-    };
 
-    constructor(value: {
-        CardTray: string[];
-        Emotion: string[];
-    }) {
+type IceBergOverviewData = { [key: string]: string[]; };
+
+class IceBergOverview {
+    value: IceBergOverviewData;
+
+    constructor(value: IceBergOverviewData) {
         makeAutoObservable(this)
         this.value = value
 
         makePersistable(this, { name: 'bergSlot', properties: ["value"], storage: window.localStorage });
     }
 
-    set(value: { [key: string]: string[]; }): void;
-    set(fn: (value: { [key: string]: string[]; }) => { [key: string]: string[]; }): void;
-    set(valueOrFn: { [key: string]: string[]; } | ((value: { [key: string]: string[]; }) => { [key: string]: string[]; })) {
+    set(valueOrFn: IceBergOverviewData | ((value: IceBergOverviewData) => IceBergOverviewData)) {
         if (typeof valueOrFn === 'function') {
             this.value = valueOrFn(this.value);
         } else {
@@ -41,9 +37,10 @@ class IceBergOverview {
     };
 }
 
+//Create a fixed sized list
 const items = new IceBergOverview({
     CardTray: ['A0', 'A1', 'A2'],
-    Emotion: ['B0'],
+    Emotion: Array.from({ length: 1 }, (_, i) => 'B0'),
 });
 
 
@@ -62,6 +59,7 @@ export function NextDnd() {
                 previousItems.current = items.value;
                 setMouse({ x: mousePosition.x, y: mousePosition.y });
             }}
+
             onDragOver={(event) => {
                 const { source, target } = event.operation;
 
@@ -77,29 +75,13 @@ export function NextDnd() {
 
 
                     if (slot.length > 0) {
-                        const currentItem = slot[0];
-                        const targetCard = manager.registry.draggables.get(currentItem) as Draggable;
+                        const targetCard = manager.registry.draggables.get(slot[0]) as Draggable;
                         const sourceCard = manager.registry.droppables.get(source.id) as Droppable;
 
-                        // manager.actions.setDragSource(targetCard.id)
-
-                        // manager.actions.start({ coordinates: { x: mousePosition.x, y: mousePosition.y }, event: new Event('dragstart') })
-                        // manager.actions.move({ to: { x: mouseCord.x, y: mouseCord.y } })
-                        // manager.actions.stop()
-                        // manager.actions.setDropTarget(sourceCard.id)
                         items.set((item) => move(move(item, targetCard, sourceCard), source, target));
 
                         return;
                     }
-
-                    // setItems((prevItems) => ({
-                    //     ...prevItems,
-                    //     CardTray: prevItems.CardTray.filter((id) => id !== source.id.toString()),
-                    // }));
-                    // setItems((items) => {
-                    //     return swap(items, source, target);
-
-                    // });
                 }
 
                 items.set(move(items.value, source, target));
@@ -142,7 +124,7 @@ export function NextDnd() {
 
                 <IceBergSlot key={'Emotion'} id={'Emotion'} >
                     {items.value.Emotion.map((id, index) => (
-                        <Item key={id} id={id} index={index} column={'Emotion'} />
+                        <Item key={id} id={id} index={index + 10} column={'Emotion'} />
                     ))}
                 </IceBergSlot>
 
