@@ -32,18 +32,15 @@ export function Item({ id, index, column }: { id: UniqueIdentifier; index: numbe
     return (
         <motion.div ref={ref} style={style}
             layoutId={String(id)}
-
             animate={
-
                 {
-
                     scale: isDragSource ? 1.05 : 1,
                     zIndex: isDragSource ? 1 : 0,
                     boxShadow: isDragSource
                         ? '0 0 0 1px rgba(63, 63, 68, 0.05), 0px 15px 15px 0 rgba(34, 33, 81, 0.25)'
                         : undefined,
+                    // rotateZ: isDragSource ? 10 : 0,
                 }
-
             }
             transition={{
                 duration: !isDragSource ? 0.25 : 0,
