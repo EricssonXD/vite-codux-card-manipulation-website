@@ -1,12 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { DragDropProvider, useDragDropManager } from '@dnd-kit/react';
-import { arrayMove, move, swap } from '@dnd-kit/helpers';
+import { move } from '@dnd-kit/helpers';
 
 import { Column, IceBergSlot } from './column';
 import { Item } from './item';
 import IcebergOverviewScreen_module from './iceberg-overview-screen.module.scss';
 import classes from './next-dnd.module.scss';
-import useMousePosition from './useMousePosition';
 
 // The example is from the official documentation
 // https://next.dndkit.com/react/guides/multiple-sortable-lists
@@ -25,7 +24,7 @@ class IceBergOverview {
         makeAutoObservable(this)
         this.value = value
 
-        makePersistable(this, { name: 'bergSlot', properties: ["value"], storage: window.localStorage });
+        // makePersistable(this, { name: 'bergSlot', properties: ["value"], storage: window.localStorage });
     }
 
     set(valueOrFn: IceBergOverviewData | ((value: IceBergOverviewData) => IceBergOverviewData)) {
@@ -40,15 +39,18 @@ class IceBergOverview {
 //Create a fixed sized list
 const items = new IceBergOverview({
     CardTray: ['A0', 'A1', 'A2'],
-    Emotion: Array.from({ length: 1 }, (_, i) => 'B0'),
+    Action: Array.from({ length: 1 }, (_, i) => 'B0'),
+    Emotion: Array.from({ length: 1 }, (_, i) => 'C0'),
+    Hey: Array.from({ length: 1 }, (_, i) => 'D0'),
+    DDD: Array.from({ length: 1 }, (_, i) => 'E0'),
 });
 
 
 export function NextDnd() {
 
     const previousItems = useRef(items.value);
-    const [mouseCord, setMouse] = useState({ x: 0, y: 0 });
-    const mousePosition = useMousePosition();
+    const [over, active] = useState(false);
+    const [swappingCard, setSwappingCard] = useState<{ swapped: boolean, cardId: string | undefined }>({ swapped: false, cardId: undefined });
 
     const manager = useDragDropManager();
 
@@ -57,7 +59,6 @@ export function NextDnd() {
             manager={manager}
             onDragStart={() => {
                 previousItems.current = items.value;
-                setMouse({ x: mousePosition.x, y: mousePosition.y });
             }}
 
             onDragOver={(event) => {
@@ -73,18 +74,51 @@ export function NextDnd() {
 
                     // console.log('onDragOver', slot);
 
-
                     if (slot.length > 0) {
                         const targetCard = manager.registry.draggables.get(slot[0]) as Draggable;
                         const sourceCard = manager.registry.droppables.get(source.id) as Droppable;
 
+                        setSwappingCard(({ cardId: slot[0], swapped: true }));
                         items.set((item) => move(move(item, targetCard, sourceCard), source, target));
 
                         return;
                     }
+
+                } else {
+                    setSwappingCard((prev) => ({ ...prev, swapped: false }));
                 }
 
                 items.set(move(items.value, source, target));
+
+            }}
+            onDragMove={(event) => {
+                if (!swappingCard.swapped && swappingCard.cardId) {
+                    const source = event.operation.source?.id.toString();
+                    if (source) {
+                        items.set((prev) => {
+
+                            var targetSlot: string | undefined = undefined;
+
+                            Object.entries(prev).map(([key, value]) => {
+                                if (value.includes(source)) {
+                                    targetSlot = key;
+                                }
+                            });
+
+                            if (!targetSlot) return prev; //If the source is not in any slot, return
+
+                            const targetCard = manager.registry.droppables.get(swappingCard.cardId!) as Droppable;
+                            const draggableTargetCard = manager.registry.draggables.get(swappingCard.cardId!) as Draggable;
+                            const slot = manager.registry.droppables.get(targetSlot) as Droppable;
+                            const sourceCard = manager.registry.draggables.get(source) as Draggable;
+
+                            return move(move(prev, sourceCard, targetCard), draggableTargetCard, slot);
+
+
+                        });
+                    }
+                    setSwappingCard({ swapped: false, cardId: undefined });
+                }
 
             }}
             onDragEnd={(event) => {

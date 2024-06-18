@@ -7,10 +7,18 @@ export function Column({ children, id }: { children: any; id: UniqueIdentifier }
         type: 'CardTray',
         accept: 'item',
         collisionPriority: CollisionPriority.Low,
+
     });
 
+    const style = {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, max-content)',
+        justifyContent: 'center',
+        gap: 8,
+    };
+
     return (
-        <div className="CardTray" ref={ref}>
+        <div className="CardTray" ref={ref} style={style}>
             {children}
         </div>
     );

@@ -41,6 +41,7 @@ export function Item({ id, index, column }: { id: UniqueIdentifier; index: numbe
                         : undefined,
                     // rotateZ: isDragSource ? 10 : 0,
                 }
+
             }
             transition={{
                 duration: !isDragSource ? 0.25 : 0,
