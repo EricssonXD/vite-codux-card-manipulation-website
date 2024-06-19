@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { DragDropProvider, useDragDropManager } from '@dnd-kit/react';
-import { arrayMove, move } from '@dnd-kit/helpers';
+import { arrayMove, arraySwap, move } from '@dnd-kit/helpers';
 
 import { CardTray, CardTraySlot, IceBergSlot } from './column';
 import { DragCard } from './item';
@@ -86,10 +86,18 @@ const items = new IceBergOverview({
 export function NextDnd() {
 
     const previousSlots = useRef(items.value);
-    const [dragging, setDragging] = useState(false);
+    const dragging = useRef(false);
     const [swappingCard, setSwappingCard] = useState<{ swapped: boolean, cardId: string | undefined }>({ swapped: false, cardId: undefined });
 
     const manager = useDragDropManager();
+
+    const IceBergObservable = observer(({ items }: { items: IceBergOverview }) => <>{
+        Object.entries(items.value.slots).map(([key, id]) => (
+            <IceBergSlot key={key} id={key.toString()} >
+                {id ? <DragCard key={id} id={id} /> : null}
+            </IceBergSlot>
+        ))
+    }</>)
 
     const TrayItemObservable = observer(({ items }: { items: IceBergOverview }) => <>{
         items.value.tray.map((id) => (
@@ -98,13 +106,12 @@ export function NextDnd() {
     }</>)
 
 
-
     return (
         <DragDropProvider
             manager={manager}
             onDragStart={() => {
                 previousSlots.current = items.value;
-                setDragging(true);
+                dragging.current = true;
             }}
 
             onDragOver={(event) => {
@@ -137,21 +144,32 @@ export function NextDnd() {
                 // } else {
                 //     setSwappingCard((prev) => ({ ...prev, swapped: false }));
                 // }
+
+                // Move to iceberg slot
                 if (target?.type === 'IceBergSlot') {
                     items.set((prev) => {
-                        let tSourceIndex = sourceIndex;
+                        const targetSlot = target.id;
 
-                        if (sourceKey !== 'tray') {
-                            tSourceIndex = prev.tray.length;
-                            prev.tray.push(sourceItem)
-                            prev.slots[sourceKey] = null;
+                        // Check if slot is empty
+                        if (prev.slots[targetSlot] === null) {
+                            prev.slots[targetSlot] = sourceItem;
+                            if (sourceKey === 'tray') {
+                                prev.tray = prev.tray.filter((id) => id !== sourceItem);
+                            } else {
+                                prev.slots[sourceKey] = null;
+                            }
+                        } else {
+                            // Swap
+                            const targetItem = prev.slots[targetSlot];
+                            prev.slots[targetSlot] = sourceItem;
+                            if (sourceKey === 'tray') {
+                                prev.tray[sourceIndex] = targetItem;
+                            } else {
+                                prev.slots[sourceKey] = targetItem;
+                            }
                         }
 
-                        const targetIndex: number = Number(target.id)
-                        return {
-                            tray: arrayMove(prev.tray, tSourceIndex, targetIndex),
-                            slots: prev.slots
-                        };
+                        return prev;
                     });
                 }
 
@@ -207,20 +225,7 @@ export function NextDnd() {
             // }}
             onDragEnd={(event) => {
                 const { source, target } = event.operation;
-                setDragging(false);
-                // if (source?.type === 'item' && target?.type === 'iceberg') {
-
-                //     if (items.CardTray.includes(source.id.toString())) {
-                //         console.log('Delete source from card tray');
-                //         // Delete source from card tray
-                //         setItems((prevItems) => ({
-                //             ...prevItems,
-                //             CardTray: prevItems.CardTray.filter((id) => id !== source.id.toString()),
-                //         }));
-                //     }
-
-                //     return;
-                // }
+                dragging.current = false;
 
                 if (event.canceled) {
                     if (source && source.type === 'item') {
@@ -234,11 +239,7 @@ export function NextDnd() {
             <div className={classes.grid}>
 
                 <div>
-                    {Object.entries(items.value.slots).map(([key, id]) => (
-                        <IceBergSlot key={key} id={key.toString()} >
-                            {id ? <DragCard key={id} id={id} /> : null}
-                        </IceBergSlot>
-                    ))}
+                    <IceBergObservable items={items} />
                 </div>
 
                 <CardTray key={'tray'} slots={6}>
