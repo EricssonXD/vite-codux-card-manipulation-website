@@ -4,12 +4,11 @@ import TypescriptSvg from './assets/typescript.svg';
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
 import { IcebergOverviewScreen } from './components/iceberg-overview-screen/iceberg-overview-screen';
-import NextDnd from './components/iceberg-overview-screen/next-dnd';
 
 function App() {
     return (
         <>
-            <NextDnd />
+            <IcebergOverviewScreen />
 
             {/* <div className={styles.App}>
                 <h2>Welcome to your App Component 🎉</h2>
