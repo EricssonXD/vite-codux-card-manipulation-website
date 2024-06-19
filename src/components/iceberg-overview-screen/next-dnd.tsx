@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { DragDropProvider, useDragDropManager } from '@dnd-kit/react';
-import { arrayMove, arraySwap, move } from '@dnd-kit/helpers';
+import React, { useRef } from 'react';
+import { DragDropProvider } from '@dnd-kit/react';
+import { arrayMove } from '@dnd-kit/helpers';
 
-import { CardTray, CardTraySlot, IceBergSlot } from './column';
+import { CardTray, IceBergSlot } from './column';
 import { DragCard } from './item';
 import IcebergOverviewScreen_module from './iceberg-overview-screen.module.scss';
 import classes from './next-dnd.module.scss';
@@ -11,8 +11,7 @@ import classes from './next-dnd.module.scss';
 // https://next.dndkit.com/react/guides/multiple-sortable-lists
 
 import { makeAutoObservable } from "mobx"
-import { makePersistable } from 'mobx-persist-store';
-import { Draggable, Droppable } from '@dnd-kit/abstract';
+import { makePersistable, stopPersisting } from 'mobx-persist-store';
 import { observer } from 'mobx-react-lite';
 
 
@@ -21,14 +20,18 @@ type IceBergData = {
     tray: string[]
 };
 
+function clone(value: IceBergData): IceBergData {
+    return { slots: { ...value.slots }, tray: [...value.tray] };
+}
+
 class IceBergOverview {
     value: IceBergData;
 
     constructor(value: IceBergData) {
         makeAutoObservable(this);
         this.value = value;
-
-        // makePersistable(this, { name: 'bergSlot', properties: ["value"], storage: window.localStorage });
+        // stopPersisting(this);
+        // makePersistable(this, { name: 'IceBergOverview', properties: ["value"], storage: window.localStorage });
     }
 
     set(valueOrFn: IceBergData | ((value: IceBergData) => IceBergData)) {
@@ -59,15 +62,16 @@ class IceBergOverview {
         }
     };
 
-    find(value: string): { key: string, index: number } | undefined {
+    find(value: string): { key: string, index?: number } | undefined {
 
         let foundKey: string | undefined;
         Object.entries(this.value.slots).find(([key, id]) => { if (id === value) { foundKey = key; return true } return false; });
-        if (foundKey) return { key: foundKey, index: 0 };
+        if (foundKey) return { key: foundKey };
 
         const index = this.value.tray.indexOf(value);
         if (index !== -1) return { key: 'tray', index: index };
     }
+
 }
 
 //Create a fixed sized list
@@ -85,11 +89,9 @@ const items = new IceBergOverview({
 
 export function NextDnd() {
 
-    const previousSlots = useRef(items.value);
-    const dragging = useRef(false);
-    const [swappingCard, setSwappingCard] = useState<{ swapped: boolean, cardId: string | undefined }>({ swapped: false, cardId: undefined });
-
-    const manager = useDragDropManager();
+    const previousSlots = useRef<IceBergData>(clone(items.value));
+    const initialDragData = useRef<{ key: string, index?: number } | null>();
+    const requireReset = useRef(false);
 
     const IceBergObservable = observer(({ items }: { items: IceBergOverview }) => <>{
         Object.entries(items.value.slots).map(([key, id]) => (
@@ -108,46 +110,28 @@ export function NextDnd() {
 
     return (
         <DragDropProvider
-            manager={manager}
-            onDragStart={() => {
-                previousSlots.current = items.value;
-                dragging.current = true;
+            onBeforeDragStart={(event) => {
+            }}
+            onDragStart={(event) => {
+                console.log('Drag Start')
+                previousSlots.current = clone(items.value);
+                if (event.operation.source) {
+                    initialDragData.current = items.find(event.operation.source.id.toString());
+                }
             }}
 
             onDragOver={(event) => {
                 const { source, target } = event.operation;
                 if (!source || !target) return;
+
                 const sourceItem = source.id.toString();
 
-                const foundItem = items.find(sourceItem);
-                if (!foundItem) return; // Return if the item does not exists
-                const sourceKey = foundItem.key;
-                const sourceIndex = foundItem.index;
-
-                // if (source?.type === 'item' && target?.type === 'iceberg') {
-                //     const targetId = target.id.toString();
-                //     const slot = items.slots[targetId];
-
-
-                //     // console.log('onDragOver', slot);
-
-                //     if (slot) {
-                //         const targetCard = manager.registry.draggables.get(slot[0]) as Draggable;
-                //         const sourceCard = manager.registry.droppables.get(source.id) as Droppable;
-
-                //         setSwappingCard(({ cardId: slot[0], swapped: true }));
-                //         items.set((item) => move(move(item, targetCard, sourceCard), source, target));
-
-                //         return;
-                //     }
-
-                // } else {
-                //     setSwappingCard((prev) => ({ ...prev, swapped: false }));
-                // }
-
-                // Move to iceberg slot
-                if (target?.type === 'IceBergSlot') {
-                    items.set((prev) => {
+                const sourceKey = initialDragData.current!.key;
+                const sourceIndex = initialDragData.current!.index;
+                items.set((prev) => {
+                    prev = clone(previousSlots.current);
+                    // Move to iceberg slot
+                    if (target?.type === 'IceBergSlot') {
                         const targetSlot = target.id;
 
                         // Check if slot is empty
@@ -159,24 +143,22 @@ export function NextDnd() {
                                 prev.slots[sourceKey] = null;
                             }
                         } else {
-                            // Swap
                             const targetItem = prev.slots[targetSlot];
-                            prev.slots[targetSlot] = sourceItem;
+
+                            // Swap
+                            prev.slots[targetSlot] = sourceItem; // Set the target slot to the source item
                             if (sourceKey === 'tray') {
-                                prev.tray[sourceIndex] = targetItem;
+                                prev.tray[sourceIndex!] = targetItem;
                             } else {
                                 prev.slots[sourceKey] = targetItem;
                             }
                         }
-
                         return prev;
-                    });
-                }
+                    }
 
-                // Move to card tray
-                if (target?.type === 'CardTraySlot') {
-                    items.set((prev) => {
-                        let tSourceIndex = sourceIndex;
+                    // Move to card tray
+                    if (target?.type === 'CardTraySlot') {
+                        let tSourceIndex = sourceIndex!;
                         const targetIndex: number = Number(target.id)
 
                         // If the source is not from the tray
@@ -190,42 +172,26 @@ export function NextDnd() {
                             tray: arrayMove(prev.tray, tSourceIndex, targetIndex),
                             slots: prev.slots
                         };
-                    });
+                    }
+
+                    return prev;
+                });
+                requireReset.current = true;
+            }}
+            onDragMove={(event) => {
+                const sourceItem = event.operation.source?.id.toString();
+                const targetSlot = event.operation.target?.id.toString();
+                if (!sourceItem) return;
+
+                // Reset if not hovering over a valid target
+                if (!targetSlot && requireReset.current) {
+                    items.set(previousSlots.current!);
+                    requireReset.current = false;
                 }
             }}
-            // onDragMove={(event) => {
-            //     if (!swappingCard.swapped && swappingCard.cardId) {
-            //         const source = event.operation.source?.id.toString();
-            //         if (source) {
-            //             items.set((prev) => {
-
-            //                 var targetSlot: string | undefined = undefined;
-
-            //                 Object.entries(prev).map(([key, value]) => {
-            //                     if (value.includes(source)) {
-            //                         targetSlot = key;
-            //                     }
-            //                 });
-
-            //                 if (!targetSlot) return prev; //If the source is not in any slot, return
-
-            //                 const targetCard = manager.registry.droppables.get(swappingCard.cardId!) as Droppable;
-            //                 const draggableTargetCard = manager.registry.draggables.get(swappingCard.cardId!) as Draggable;
-            //                 const slot = manager.registry.droppables.get(targetSlot) as Droppable;
-            //                 const sourceCard = manager.registry.draggables.get(source) as Draggable;
-
-            //                 return move(move(prev, sourceCard, targetCard), draggableTargetCard, slot);
-
-
-            //             });
-            //         }
-            //         setSwappingCard({ swapped: false, cardId: undefined });
-            //     }
-
-            // }}
             onDragEnd={(event) => {
                 const { source, target } = event.operation;
-                dragging.current = false;
+                initialDragData.current = null;
 
                 if (event.canceled) {
                     if (source && source.type === 'item') {
