@@ -5,22 +5,15 @@ import { DraggableCard } from '../draggable-card/draggable-card';
 import { shapeIntersection } from '@dnd-kit/collision';
 import { UniqueIdentifier } from '@dnd-kit/abstract';
 import { motion } from 'framer-motion';
+import { useDraggable } from '@dnd-kit/react';
 
 
 
-export function Item({ id, index, column }: { id: UniqueIdentifier; index: number; column: string }) {
-    const { ref, isDragSource } = useSortable({
+export function DragCard({ id }: { id: UniqueIdentifier; }) {
+    const { ref, isDragSource } = useDraggable({
         id,
-        index,
         type: 'item',
-        accept: 'item',
-        group: column,
-        collisionDetector: shapeIntersection,
-        // transition: { duration: 3000, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', idle: true },
-        transition: null,
         modifiers: [RestrictToWindow],
-
-
     });
 
     const style = {
