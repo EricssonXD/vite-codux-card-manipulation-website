@@ -85,9 +85,10 @@ function Content() {
                     // Move to iceberg slot
                     if (target?.type === 'IceBergSlot') {
                         const targetSlot = target.id;
+                        const targetItem = prev.slots[targetSlot];
 
                         // Check if slot is empty
-                        if (prev.slots[targetSlot] === null) {
+                        if (targetItem === null) {
                             prev.slots[targetSlot] = sourceItem;
                             if (sourceKey === 'tray') {
                                 prev.tray = prev.tray.filter((id) => id !== sourceItem);
@@ -95,9 +96,8 @@ function Content() {
                                 prev.slots[sourceKey] = null;
                             }
                         } else {
-                            const targetItem = prev.slots[targetSlot];
 
-                            // Swap
+                            // Swap if not empty
                             prev.slots[targetSlot] = sourceItem; // Set the target slot to the source item
                             if (sourceKey === 'tray') {
                                 prev.tray[sourceIndex!] = targetItem;
