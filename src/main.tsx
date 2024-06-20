@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { RouterProvider, createBrowserHistory, createMemoryHistory, createRouter } from '@tanstack/react-router'
 
 import './index.css';
 
@@ -11,8 +10,15 @@ import './utilities/disable-select'; // Importing this disables text selection o
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
-// Create a new router instance
-const router = createRouter({ routeTree })
+// Create a new router instance we use memory history for codux, for production use createBrowserHistory
+const codux = true;
+
+const history = codux ? createMemoryHistory({
+    initialEntries: ['/'], // Pass your initial url
+}) :
+    createBrowserHistory();
+
+const router = createRouter({ routeTree, history: history })
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
