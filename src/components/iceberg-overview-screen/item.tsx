@@ -48,7 +48,7 @@ export function DragCard({ id }: { id: UniqueIdentifier; }) {
                     delay: isDragSource ? 0 : 0.25,
                 },
             }}>
-            <DraggableCard id={id} imageText={id.toString()} />
+            <DraggableCard imageText={id.toString()} />
         </motion.div>
 
     );
