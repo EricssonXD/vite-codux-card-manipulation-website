@@ -28,6 +28,7 @@
     "@codux-boards/react-semantic": "^1.0.4",
     "@tanstack/router-devtools": "^1.39.4",
     "@tanstack/router-plugin": "^1.39.5",
+    "@tanstack/router-vite-plugin": "^1.39.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
